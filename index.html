@@ -13,6 +13,90 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=In    ter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
+ <!-- Razorpay Checkout Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+// BACKEND_URL – change this to your live backend URL when deployed
+const BACKEND_URL = 'http://localhost:3000'; // ← Change to https://your-backend.up.railway.app later
+
+// Payment handler
+async function handlePayment(plan, amount, customerEmail) {
+    try {
+        // 1. Create order on your backend
+        const response = await fetch(`${BACKEND_URL}/api/create-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                amount: amount,
+                plan: plan,
+                customerEmail: customerEmail
+            })
+        });
+
+        if (!response.ok) throw new Error('Failed to create order');
+
+        const order = await response.json();
+
+        // 2. Configure Razorpay checkout
+        const options = {
+            key: 'zp_live_STD6krBcucgC7c', // Replace with your actual Razorpay Key ID (test or live)
+            amount: order.amount,
+            currency: order.currency,
+            name: 'JustClawIt',
+            description: `${plan} Plan - Monthly Subscription`,
+            image: 'https://justclawit.vercel.app/favicon.png',
+            order_id: order.id,
+            handler: function (response) {
+                // 3. Verify payment on backend
+                fetch(`${BACKEND_URL}/api/verify-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                        customerEmail: customerEmail,
+                        plan: plan
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Payment successful! Your AI agent is being deployed. Check your email for credentials.');
+                        window.location.href = '/welcome.html'; // Optional success page
+                    } else {
+                        alert('Payment verification failed. Please contact support.');
+                    }
+                });
+            },
+            prefill: {
+                name: '',
+                email: customerEmail,
+                contact: ''
+            },
+            theme: { color: '#FF0000' }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+
+    } catch (error) {
+        console.error('Payment error:', error);
+        alert('Something went wrong. Please try again.');
+    }
+}
+
+// Function to ask for email and start payment
+function startPayment(plan, amount) {
+    const email = prompt('Please enter your email address to continue:');
+    if (email && email.includes('@')) {
+        handlePayment(plan, amount, email);
+    } else {
+        alert('Please enter a valid email address.');
+    }
+}
+</script>
 <body>
     <!-- NAVIGATION (simplified) -->
     <nav class="navbar">
@@ -162,7 +246,7 @@
                     <li>✓ 1 agent</li>
                     <li>✓ Basic integrations</li>
                 </ul>
-                <a href="#" class="btn btn-outline">Get Started</a>
+                <button onclick="startPayment('Starter', 190000)" class="btn btn-outline">Get Started</button>
             </div>
             <!-- Pro Card (Most Popular) -->
             <div class="pricing-card popular">
@@ -176,7 +260,7 @@
                     <li>✓ All integrations</li>
                     <li>✓ Priority support</li>
                 </ul>
-                <a href="#" class="btn btn-primary">Start Pro</a>
+                <button onclick="startPayment('Pro', 290000)" class="btn btn-primary">Start Pro</button>
             </div>
             <!-- Business Card -->
             <div class="pricing-card">
@@ -190,7 +274,7 @@
                     <li>✓ Team access</li>
                     <li>✓ 24/7 support</li>
                 </ul>
-                <a href="#" class="btn btn-outline">Contact Sales</a>
+                <button onclick="startPayment('Business', 490000)" class="btn btn-outline">Start Business</button>
             </div>
         </div>
     </div>
