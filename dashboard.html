@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JustClawIt – Your Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background: #0A0A0A;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .logout-btn {
+            background: #FF0000;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .token-box {
+            background: #111;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+        .chat-area {
+            background: #111;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        #messages {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            padding: 10px;
+            background: #0a0a0a;
+            margin-bottom: 10px;
+        }
+        .user-message {
+            text-align: right;
+            margin: 10px;
+            color: #FF0000;
+        }
+        .assistant-message {
+            text-align: left;
+            margin: 10px;
+            color: #ccc;
+        }
+        input, button {
+            padding: 10px;
+            border-radius: 4px;
+            border: none;
+        }
+        input {
+            width: 80%;
+            background: #222;
+            color: white;
+        }
+        button {
+            background: #FF0000;
+            color: white;
+            cursor: pointer;
+            width: 18%;
+        }
+        .token-prompt {
+            background: #111;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .token-prompt input {
+            width: 300px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="dashboard-header">
+        <h1>Your JustClawIt Dashboard</h1>
+        <button id="logout" class="logout-btn">Logout</button>
+    </div>
+
+    <!-- This div is shown when no token is stored -->
+    <div id="token-prompt" class="token-prompt">
+        <h2>Welcome back!</h2>
+        <p>Please enter your access token to start chatting with your AI assistant:</p>
+        <input type="text" id="token-input" placeholder="Paste your token here..." />
+        <br />
+        <button id="login-button">Connect</button>
+    </div>
+
+    <!-- This div is shown after login (token stored) -->
+    <div id="dashboard-content" style="display: none;">
+        <div class="token-box">
+            <strong>Your current token:</strong> <span id="display-token"></span>
+        </div>
+        <div class="chat-area">
+            <h3>Chat with your AI</h3>
+            <div id="messages"></div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="message-input" placeholder="Type your message..." />
+                <button id="send-button">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Change this to your actual backend URL (Railway domain)
+    const BACKEND_URL = 'https://justclawit-backend-production.up.railway.app';
+    let token = '';
+
+    // Load stored token from browser's localStorage on page load
+    function loadFromStorage() {
+        const storedToken = localStorage.getItem('justclawit_token');
+        if (storedToken) {
+            token = storedToken;
+            document.getElementById('token-prompt').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = 'block';
+            document.getElementById('display-token').innerText = token;
+        }
+    }
+
+    // Save token and show chat interface
+    function saveToken(newToken) {
+        localStorage.setItem('justclawit_token', newToken);
+        token = newToken;
+        document.getElementById('token-prompt').style.display = 'none';
+        document.getElementById('dashboard-content').style.display = 'block';
+        document.getElementById('display-token').innerText = token;
+    }
+
+    // Logout: clear localStorage and show token prompt
+    function logout() {
+        localStorage.removeItem('justclawit_token');
+        token = '';
+        document.getElementById('token-prompt').style.display = 'block';
+        document.getElementById('dashboard-content').style.display = 'none';
+        document.getElementById('token-input').value = '';
+        document.getElementById('messages').innerHTML = ''; // Clear messages
+    }
+
+    // Send a message to the backend
+    async function sendMessage() {
+        const input = document.getElementById('message-input');
+        const message = input.value.trim();
+        if (!message) return;
+
+        // Display user message immediately
+        addMessage('You', message);
+        input.value = '';
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, message })
+            });
+            const data = await response.json();
+            const reply = data.answer || data.message || 'Sorry, I could not understand.';
+            addMessage('Assistant', reply);
+        } catch (error) {
+            console.error(error);
+            addMessage('Assistant', 'Error connecting to server. Please try again.');
+        }
+    }
+
+    // Helper to append a message to the chat box
+    function addMessage(sender, text) {
+        const messagesDiv = document.getElementById('messages');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = sender === 'You' ? 'user-message' : 'assistant-message';
+        msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        messagesDiv.appendChild(msgDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to bottom
+    }
+
+    // Wire up buttons
+    document.getElementById('login-button').addEventListener('click', () => {
+        const inputToken = document.getElementById('token-input').value.trim();
+        if (inputToken) {
+            saveToken(inputToken);
+        } else {
+            alert('Please enter your token.');
+        }
+    });
+
+    document.getElementById('logout').addEventListener('click', logout);
+
+    document.getElementById('send-button').addEventListener('click', sendMessage);
+    document.getElementById('message-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    // Initial load: check if token already exists in localStorage
+    loadFromStorage();
+</script>
+</body>
+</html>
