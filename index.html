@@ -23,17 +23,22 @@ const BACKEND_URL = 'https://justclawit-backend-production.up.railway.app'; // �
 // Payment handler
 async function handlePayment(plan, amount, customerEmail) {
     try {
+        // Retrieve tokens from localStorage (set by setup.html)
+const telegramToken = localStorage.getItem('justclawit_telegram_token') || '';
+const discordToken = localStorage.getItem('justclawit_discord_token') || '';
         // 1. Create order on your backend
-        const response = await fetch(`${BACKEND_URL}/api/create-order`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                amount: amount,
-                plan: plan,
-                customerEmail: customerEmail
-            })
-        });
-
+       const response = await fetch(`${BACKEND_URL}/api/create-order`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        amount: amount,
+        plan: plan,
+        customerEmail: customerEmail,
+        telegramToken: telegramToken,   // <-- added
+        discordToken: discordToken,     // <-- added
+        whatsappToken: ''               // <-- placeholder for now
+    })
+});
         if (!response.ok) throw new Error('Failed to create order');
 
         const order = await response.json();
@@ -62,13 +67,21 @@ async function handlePayment(plan, amount, customerEmail) {
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success) {
+                    if (data.success) if (data.success) {
+    // Clear tokens after successful payment
+    localStorage.removeItem('justclawit_telegram_token');
+    localStorage.removeItem('justclawit_discord_token');
+    alert('Payment successful! ...');
+    // ...
+} if (data.success)
+
+                    {
                         alert('Payment successful! Your AI agent is being deployed. Check your email for credentials.');
                         window.location.href = '/welcome.html'; // Optional success page
                     } else {
                         alert('Payment verification failed. Please contact support.');
                     }
-                });
+            });
             },
             prefill: {
                 name: '',
@@ -237,49 +250,40 @@ function startPayment(plan, amount) {
     <div class="container">
         <h2 class="section-title">Simple, Transparent Pricing</h2>
         <div class="pricing-grid">
-            <!-- Starter Card -->
             <div class="pricing-card">
-                <h3>Starter</h3>
-                <div class="price">$19<span>/month</span></div>
-                <p class="price-description">Perfect for testing</p>
-                <ul class="price-features">
-                    <li>✓ 5,000 requests/month</li>
-                    <li>✓ 1 agent</li>
-                    <li>✓ Basic integrations</li>
-                </ul>
-                <button onclick="startPayment('Starter', 190000)" class="btn btn-outline">Get Started</button>
-            </div>
-            <!-- Pro Card (Most Popular) -->
-            <div class="pricing-card popular">
-                <div class="popular-badge">MOST POPULAR</div>
-                <h3>Pro</h3>
-                <div class="price">$29<span>/month</span></div>
-                <p class="price-description">For individuals</p>
-                <ul class="price-features">
-                    <li>✓ 10,000 requests/month</li>
-                    <li>✓ 3 agents</li>
-                    <li>✓ All integrations</li>
-                    <li>✓ Priority support</li>
-                </ul>
-                <button onclick="startPayment('Pro', 290000)" class="btn btn-primary">Start Pro</button>
-            </div>
-            <!-- Business Card -->
-            <div class="pricing-card">
-                <h3>Business</h3>
-                <div class="price">$49<span>/month</span></div>
-                <p class="price-description">For teams & automation</p>
-                <ul class="price-features">
-                    <li>✓ 50,000 requests/month</li>
-                    <li>✓ 10 agents</li>
-                    <li>✓ Advanced integrations</li>
-                    <li>✓ Team access</li>
-                    <li>✓ 24/7 support</li>
-                </ul>
-                <button onclick="startPayment('Business', 490000)" class="btn btn-outline">Start Business</button>
-            </div>
-        </div>
-    </div>
-</section>
+    <div class="pricing-grid">
+  <!-- Pro Plan -->
+  <div class="pricing-card popular">
+    <div class="popular-badge">MOST POPULAR</div>
+    <h3>Pro</h3>
+    <div class="price">$29<span>/month</span></div>
+    <p class="price-description">Includes <strong>$10 AI credits</strong> per month</p>
+    <ul class="price-features">
+      <li>🤖 <strong>Models:</strong> Gemini 3 Flash, GPT-5.2</li>
+      <li>💳 <strong>AI credits:</strong> $10 monthly (usage deducted)</li>
+      <li>🔌 <strong>Connect:</strong> Telegram, Discord, WhatsApp</li>
+      <li>⚡ <strong>One agent</strong> for all channels</li>
+      <li>📞 Priority support</li>
+    </ul>
+    <a href="/setup.html?plan=pro" class="btn btn-primary">Start Pro</a>
+  </div>
+
+  <!-- Business Plan -->
+  <div class="pricing-card">
+    <h3>Business</h3>
+    <div class="price">$49<span>/month</span></div>
+    <p class="price-description">Includes <strong>$15 AI credits</strong> per month</p>
+    <ul class="price-features">
+      <li>🤖 <strong>Models:</strong> Gemini 3 Flash, GPT-5.2, Opus 4.6</li>
+      <li>💳 <strong>AI credits:</strong> $15 monthly (usage deducted)</li>
+      <li>🔌 <strong>Connect:</strong> Telegram, Discord, WhatsApp</li>
+      <li>⚡ <strong>One agent</strong> for all channels</li>
+      <li>👥 Team access & 24/7 support</li>
+    </ul>
+    <a href="/setup.html?plan=business" class="btn btn-outline">Start Business</a>
+  </div>
+</div>
+</div>
               <!-- EMAIL SIGNUP SECTION -->
 <section class="newsletter" style="background: #050505; padding: 4rem 0;">
     <div class="container" style="text-align: center;">

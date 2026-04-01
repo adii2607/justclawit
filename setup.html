@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JustClawIt – Setup Your Agent</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background: #0A0A0A;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: #111;
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        h1 { color: #FF0000; margin-bottom: 1rem; }
+        .field {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: white;
+        }
+        .help {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-top: 0.25rem;
+        }
+        .btn {
+            background: #FF0000;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .btn:hover {
+            background: #cc0000;
+        }
+        .note {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #aaa;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Set up your AI agent</h1>
+    <p>Provide the bot tokens for the channels you want to connect. Your agent will work across all channels you enable.</p>
+
+    <form id="setup-form">
+        <div class="field">
+            <label>Telegram Bot Token *</label>
+            <input type="text" id="telegram_token" placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz" required>
+            <div class="help">Get it from <a href="https://t.me/botfather" target="_blank">@BotFather</a> on Telegram.</div>
+        </div>
+
+        <div class="field">
+            <label>Discord Bot Token (optional)</label>
+            <input type="text" id="discord_token" placeholder="MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.G...">
+            <div class="help">Create a bot at <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a>. Invite it to your server.</div>
+        </div>
+
+        <div class="field">
+            <label>WhatsApp (coming soon)</label>
+            <input type="text" id="whatsapp_token" placeholder="Will be added soon" disabled>
+            <div class="help">WhatsApp Business API support is on the roadmap.</div>
+        </div>
+
+        <button type="submit" class="btn">Continue to Payment →</button>
+    </form>
+    <div class="note">
+        * After payment, your AI agent will be deployed with these tokens. You'll receive an email with your access token to log into the dashboard.
+    </div>
+</div>
+
+<script>
+    document.getElementById('setup-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const telegram = document.getElementById('telegram_token').value.trim();
+        if (!telegram) {
+            alert('Please enter your Telegram Bot Token');
+            return;
+        }
+
+        // Store tokens in localStorage
+        localStorage.setItem('justclawit_telegram_token', telegram);
+        localStorage.setItem('justclawit_discord_token', document.getElementById('discord_token').value.trim());
+        // WhatsApp not used yet
+
+        // Redirect to landing page (will automatically open payment modal)
+        window.location.href = '/index.html#pricing';
+    });
+</script>
+</body>
+</html>
